@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="/layui/css/layui.css">
+</head>
+<body>
+    <form class="layui-form layui-form-pane" action="" lay-filter="data-from">
+        <div class="layui-form-item">
+            <label class="layui-form-label">名称</label>
+            <div class="layui-input-inline">
+                <input type="text" name="name" lay-verify="required" placeholder="请输入" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+    </form>
+    <table id="table1" lay-filter="table1"></table>
+</body>
+<script type="text/javascript" src="/layui/layui.js"></script>
+<script>
+    let sourceJson =  parent.window.importListJson
+    let json = []
+    sourceJson.forEach(item => {
+        let j = {
+            'address': item['地点'],
+            'time': item['时间'],
+            'train': item['车次']
+        }
+        json.push(j)
+    })
+    layui.use(['table', 'form', 'jquery'], function(){
+        window.table = layui.table
+        window.form = layui.form
+        window.$ = layui.jquery
+        table.render({
+            elem: '#table1',
+            data: json,
+            title: '编辑导入数据',
+            cols: [[
+                {field:'address', title:'地点', width:80, fixed: 'left', unresize: true, edit: 'text'},
+                {field:'time', title:'时间', width:120, edit: 'text', sort: true},
+                {field:'train', title:'车次', width:150, edit: 'text'}
+            ]]
+        })
+
+        table.on('edit(table1)', function(obj){
+            let value = obj.value //得到修改后的值
+                ,data = obj.data //得到所在行所有键值
+                ,field = obj.field; //得到字段
+        })
+    })
+
+    window.yes = () => {
+        let name = $('input[name="name"]').val()
+        if(!name){
+            layer.open({
+                title: '提示'
+                ,content: '请输入名称！'
+            })
+            return;
+        }
+        let list = window.table.getData('table1')
+        let formData = {
+            name,
+            list
+        }
+        let index
+        $.ajax({
+            beforeSend: xhr => {
+                index = parent.layer.load(1)
+            },
+            contentType: 'application/json; charset=UTF-8',
+            data: JSON.stringify(formData),
+            url: '/data/train',
+            type: 'POST',
+            success: (result,status,xhr) => {
+                console.log(result)
+                parent.layer.close(index)
+                parent.layer.close(parent.layer.getFrameIndex(window.name))
+            },
+            complete: (xhr,status) => {
+
+            }
+        })
+    }
+</script>
+</html>
